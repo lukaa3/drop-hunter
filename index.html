@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drop Hunter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4FA; --card:#FFFFFF; --ink:#1A1C3A; --muted:#5C6285; --line:#DDE1F0; --soft:#E9ECF8;
+  --yellow:#FFC928; --blue:#2F5BFF; --red:#E8344A; --green:#0B9A6A; --amber:#C77700;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11132A; --card:#1B1E3D; --ink:#EEF0FF; --muted:#A1A7CC; --line:#2C3160; --soft:#23274C;
+    --blue:#7E9BFF; --red:#FF6B7C; --green:#3FD69C; --amber:#FFB84D; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11132A; --card:#1B1E3D; --ink:#EEF0FF; --muted:#A1A7CC; --line:#2C3160; --soft:#23274C;
+  --blue:#7E9BFF; --red:#FF6B7C; --green:#3FD69C; --amber:#FFB84D; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Bricolage Grotesque',ui-rounded,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 56px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.dot{width:14px;height:14px;border-radius:50%;background:conic-gradient(#ffd23f,#ff5fa2,#5ad8ff,#8dff9e,#ffd23f)}
+.today{color:var(--muted);font-size:14px}
+
+/* holo badges — the one loud thing */
+.badge{--c1:#555;--c2:#222;position:relative;display:inline-flex;align-items:center;gap:9px;
+  padding:6px 14px 6px 6px;border-radius:999px;color:#fff;overflow:hidden;isolation:isolate;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+.badge .em{position:relative;z-index:2;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none}
+.badge .em svg{width:20px;height:20px}
+.badge .nm{position:relative;z-index:2;font-weight:800;font-size:14px;line-height:1.05;letter-spacing:-.01em;
+  text-shadow:0 1px 1px rgba(0,0,0,.25);white-space:nowrap}
+.badge::after{content:"";position:absolute;inset:-120%;z-index:1;pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0 12%,rgba(255,255,255,.55) 17%,rgba(110,255,235,.45) 21%,
+  rgba(255,110,210,.45) 25%,rgba(255,240,120,.4) 29%,transparent 34% 62%,rgba(255,255,255,.35) 67%,transparent 72%);
+  mix-blend-mode:overlay;transform:rotate(var(--r,20deg));transition:transform .35s ease-out}
+.badge.xl{padding:12px 26px 12px 12px;gap:14px;border-radius:28px}
+.badge.xl .em{width:64px;height:64px}
+.badge.xl .em svg{width:42px;height:42px}
+.badge.xl .nm{font-size:30px;white-space:normal}
+.badge.xl .nm small{display:block;font-size:15px;font-weight:600;opacity:.92;margin-top:4px}
+@keyframes sheen{from{transform:rotate(-40deg)}to{transform:rotate(320deg)}}
+.badge.xl.play::after{animation:sheen 2.6s cubic-bezier(.3,.6,.3,1) 1}
+@media (prefers-reduced-motion:reduce){.badge::after{transition:none}.badge.xl.play::after{animation:none}}
+
+/* hero */
+.hero{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
+.hero h1{font-size:clamp(26px,6.4vw,38px);line-height:1.08;letter-spacing:-.025em;margin:16px 0 6px;font-weight:800}
+.hero p{margin:0;color:var(--muted)}
+.window{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--soft);display:flex;gap:12px;align-items:flex-start}
+.window b{display:block}
+.window .when{color:var(--muted);font-size:14px}
+.lvl{flex:none;width:10px;height:10px;border-radius:50%;margin-top:7px}
+.l3{background:var(--green)} .l2{background:var(--amber)} .l1{background:var(--muted)}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
+  padding:4px;margin:0 -4px 16px;background:var(--bg)}
+.tabs button{border:0;background:transparent;padding:10px 2px;border-radius:12px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.panel[hidden]{display:none}
+
+/* best shots */
+.opp{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}
+.opp.live{border:2px solid var(--green)}
+.opp.skip{opacity:.8}
+.ohead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.pill{font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--muted)}
+.pill.live{background:var(--green);color:#fff}
+.pill.soon{background:var(--yellow);color:#2e2200}
+.pill.skip{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
+.opp h3{margin:2px 0 4px;font-size:18px;line-height:1.25;letter-spacing:-.015em}
+.opp .ow{font-weight:700;font-size:15px}
+.opp p{margin:6px 0 0;font-size:15px;color:var(--muted)}
+.opp ol{margin:8px 0 0;padding-left:20px;font-size:15px}
+.opp ol li{margin:3px 0}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.links a{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border-radius:11px;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:700;font-size:14px}
+.links a.alt{background:var(--soft);color:var(--ink)}
+.checked{font-size:13px;color:var(--muted);margin:0 2px 12px}
+.srcs{margin-top:22px}
+.srcs a{display:block;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);text-decoration:none;margin-bottom:8px}
+.srcs a b{display:block}
+.srcs a span{font-size:14px;color:var(--muted)}
+
+/* simpler best shots */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.seg button{border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:12px 6px;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.seg button svg{width:20px;height:20px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mode{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;letter-spacing:.04em;padding:4px 9px;border-radius:999px;color:#fff}
+.mode svg{width:14px;height:14px}
+.mode.online{background:#2F5BFF} .mode.store{background:#0E8F63}
+.opp .store-nm{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:8px 0 0;line-height:1.1}
+.opp .what{font-size:15px;color:var(--muted);margin:2px 0 0}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:12px 0 0;font-size:15px}
+.facts dt{font-weight:800}
+.facts dd{margin:0}
+details.more{margin-top:8px}
+details.more summary{cursor:pointer;font-weight:700;color:var(--blue);font-size:14px;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more ol{margin:6px 0 0;padding-left:20px;font-size:14px;color:var(--muted)}
+.alerts{background:var(--card);border:1.5px solid var(--blue);border-radius:18px;padding:14px;margin-bottom:14px}
+.alerts h2{font-size:18px;margin:0 0 4px;letter-spacing:-.015em}
+.alerts > p{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.arow{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.arow .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center}
+.arow div{flex:1;min-width:0;font-size:14px;color:var(--muted)}
+.arow div b{display:block;color:var(--ink);font-size:15px}
+.arow a{flex:none;padding:8px 11px;border-radius:10px;background:var(--soft);color:var(--ink);font-weight:700;font-size:13px;text-decoration:none}
+
+/* drops */
+.drop{display:grid;grid-template-columns:56px 1fr;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.drop:first-child{border-top:0;padding-top:4px}
+.cal{text-align:center;border-radius:14px;background:var(--card);border:1px solid var(--line);padding:6px 0 8px;align-self:start}
+.cal .dow{font-size:12px;color:var(--muted);font-weight:600}
+.cal .dn{font-size:26px;font-weight:800;line-height:1}
+.cal .mo{font-size:13px;font-weight:700;color:var(--red)}
+.drop h3{margin:10px 0 2px;font-size:19px;letter-spacing:-.015em;line-height:1.2}
+.away{font-size:14px;color:var(--muted)}
+.items{list-style:none;margin:12px 0 0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.items li{border-top:1px solid var(--line)}
+.irow{display:flex;align-items:center;gap:10px;padding:11px 12px}
+.wbtn{border:0;background:none;padding:4px 0 0;color:var(--blue);font-weight:700;font-size:14px}
+.buy{padding:2px 12px 12px}
+.buy[hidden]{display:none}
+.buy p{margin:0 0 8px;font-size:14px;color:var(--muted)}
+.shops{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.shops li{border:0;display:grid;grid-template-columns:132px 1fr;gap:10px;align-items:center}
+.shop{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:9px 11px;border-radius:11px;background:var(--soft);color:var(--ink);text-decoration:none;font-weight:700;font-size:14px}
+.shop:hover{background:var(--line)}
+.shop.pc{background:var(--yellow);color:#2e2200}
+.shops .how{font-size:13px;color:var(--muted);line-height:1.35}
+.pcnote{margin-top:10px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--yellow);background:color-mix(in srgb,var(--yellow) 12%,var(--card));font-size:14px}
+.pcnote b{display:block;font-size:15px;margin-bottom:2px}
+.pcnote a{display:inline-block;margin-top:8px;font-weight:800;color:var(--ink)}
+@media (max-width:420px){.shops li{grid-template-columns:118px 1fr}}
+.items li:first-child{border-top:0}
+.items .nmx{flex:1;min-width:0}
+.items .nmx span{display:block;font-size:13px;color:var(--muted)}
+.price{font-weight:800;white-space:nowrap}
+.star{flex:none;width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:transparent;display:grid;place-items:center;font-size:18px;color:var(--muted)}
+.star[aria-pressed="true"]{background:var(--yellow);border-color:var(--yellow);color:#3a2a00}
+.note{margin:10px 0 0;font-size:14px;color:var(--muted)}
+details.plan{margin-top:10px}
+details.plan summary{cursor:pointer;font-weight:700;color:var(--blue);font-size:15px;list-style:none}
+details.plan summary::-webkit-details-marker{display:none}
+details.plan summary::before{content:"+ "}
+details.plan[open] summary::before{content:"– "}
+details.plan ol{margin:8px 0 0;padding-left:20px;font-size:15px}
+details.plan li{margin:4px 0}
+.out{margin-top:22px}
+.out h2,.sec h2{font-size:17px;margin:0 0 10px;letter-spacing:-.01em}
+.outrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.outrow:first-of-type{border-top:0}
+.outrow span{color:var(--muted);white-space:nowrap}
+
+/* week */
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+.days button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 0;font-weight:700;font-size:14px;position:relative}
+.days button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.days button .pip{position:absolute;left:50%;bottom:3px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--green)}
+.days button[aria-pressed="true"] .pip{background:#fff}
+.slots{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.slots li{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 14px;border-top:1px solid var(--line)}
+.slots li:first-child{border-top:0}
+.slots .t{font-weight:800;white-space:nowrap}
+.slots .d{grid-column:2;color:var(--muted);font-size:14px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:2px}
+.tag.l3{background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--green)}
+.tag.l2{background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--amber)}
+.tag.l1{background:var(--soft);color:var(--muted)}
+.empty{padding:18px 14px;color:var(--muted)}
+.tznote{font-size:13px;color:var(--muted);margin:8px 2px 0}
+.stores{margin-top:22px}
+details.store{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0 14px;margin-bottom:8px}
+details.store summary{cursor:pointer;padding:13px 0;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:14px;list-style:none}
+details.store summary::-webkit-details-marker{display:none}
+details.store summary span{font-weight:500;color:var(--muted);font-size:14px;text-align:right}
+details.store dl{margin:0 0 14px}
+details.store dt{font-weight:700;font-size:14px;margin-top:8px}
+details.store dd{margin:2px 0 0;font-size:15px;color:var(--muted)}
+
+/* prices */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font-weight:700;font-size:14px}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.prow{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px}
+.prow .h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.prow .h b{font-size:16px}
+.prow .mk{font-weight:800;font-size:18px;white-space:nowrap}
+.prow .sub{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-top:2px}
+.bar{height:8px;border-radius:99px;background:var(--soft);margin-top:10px;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.bar::after{content:"";position:absolute;top:0;bottom:0;left:calc(100%/4);width:2px;background:var(--ink);opacity:.35}
+.verdict{font-weight:700}
+.v1{color:var(--green)} .v2{color:var(--amber)} .v3,.v4{color:var(--red)}
+.calc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:18px}
+.calc .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+label.f{display:block;font-size:13px;color:var(--muted);font-weight:600}
+label.f input,label.f select{display:block;width:100%;margin-top:4px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:16px}
+.calcout{margin-top:12px;font-size:15px;min-height:1.4em}
+.src{font-size:13px;color:var(--muted);margin:12px 2px 0}
+
+/* my list */
+.sec{margin-bottom:22px}
+.mine{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.mine li{display:flex;align-items:center;gap:10px;padding:11px 12px;border-top:1px solid var(--line)}
+.mine li:first-child{border-top:0}
+.mine .nmx{flex:1;min-width:0}
+.mine .nmx span{display:block;font-size:13px;color:var(--muted)}
+.gotbtn{flex:none;border:1px solid var(--line);background:transparent;border-radius:10px;padding:7px 10px;font-weight:700;font-size:14px}
+.gotbtn[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.total{display:flex;justify-content:space-between;padding:10px 4px 0;font-size:15px}
+.total b{font-size:17px}
+.logform{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px}
+.logform .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:12px;padding:12px;font-weight:800;background:var(--ink);color:var(--bg)}
+.log{list-style:none;margin:10px 0 0;padding:0}
+.log li{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;border-top:1px solid var(--line);font-size:15px}
+.log li:first-child{border-top:0}
+.log .x{margin-left:auto;border:0;background:transparent;color:var(--muted);font-size:18px;padding:0 6px}
+.log small{display:block;color:var(--muted)}
+.saved{font-size:13px;color:var(--muted);margin-top:8px}
+footer{margin-top:32px;font-size:13px;color:var(--muted)}
+footer p{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="dot" aria-hidden="true"></span>Drop Hunter</div>
+    <div class="today" id="today"></div>
+  </header>
+
+  <section class="hero" id="hero" aria-live="polite"></section>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" aria-selected="true" aria-controls="p-best" id="t-best">Best shots</button>
+    <button role="tab" aria-selected="false" aria-controls="p-drops" id="t-drops">Drops</button>
+    <button role="tab" aria-selected="false" aria-controls="p-week" id="t-week">Weekly</button>
+    <button role="tab" aria-selected="false" aria-controls="p-prices" id="t-prices">Prices</button>
+    <button role="tab" aria-selected="false" aria-controls="p-mine" id="t-mine">My list</button>
+  </nav>
+
+  <section class="panel" id="p-best" role="tabpanel" aria-labelledby="t-best"></section>
+  <section class="panel" id="p-drops" role="tabpanel" aria-labelledby="t-drops" hidden></section>
+  <section class="panel" id="p-week" role="tabpanel" aria-labelledby="t-week" hidden></section>
+  <section class="panel" id="p-prices" role="tabpanel" aria-labelledby="t-prices" hidden></section>
+  <section class="panel" id="p-mine" role="tabpanel" aria-labelledby="t-mine" hidden></section>
+
+  <footer>
+    <p>Drops checked Oct 2, 2026; prices Sep 28, 2026. Market prices are TCGplayer market and resale reports; they move daily.</p>
+    <p>Restock times are patterns collectors have logged, not store promises. Set badges are original designs, not the official logos.</p>
+  </footer>
+</div>
+
+<script>
+/* ---------- data ---------- */
+const EM = {
+  star:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 1.8l2.4 4.3 4.8-1-1 4.8 4.3 2.4-4.3 2.4 1 4.8-4.8-1L12 22.2l-2.4-4.3-4.8 1 1-4.8L1.5 12l4.3-2.4-1-4.8 4.8 1z" fill="rgba(255,255,255,.95)"/><text x="12" y="15.6" text-anchor="middle" font-size="9.5" font-weight="800" font-family="Bricolage Grotesque,system-ui,sans-serif" fill="#C2317F">30</text></svg>',
+  delta:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3L21.5 20H2.5z"/><path d="M12 10.5l3.6 6.2H8.4z" fill="#fff" stroke="none"/></svg>',
+  moon:'<svg viewBox="0 0 24 24"><path d="M15.5 3.2A9 9 0 1 0 20.8 16 7.2 7.2 0 0 1 15.5 3.2z" fill="#fff"/><circle cx="18" cy="6" r="1.3" fill="#fff"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M3 14l5-6 3.5 5L16 6l5 8"/><path d="M3 19h18" opacity=".6"/></svg>',
+  hex:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"><path d="M12 2.5l8.3 4.8v9.4L12 21.5l-8.3-4.8V7.3z"/><circle cx="12" cy="12" r="3" fill="#fff" stroke="none"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l7-7 7 7"/><path d="M5 19l7-7 7 7" opacity=".7"/></svg>'
+};
+const SETS = {
+  c30:{name:'30th Celebration', short:'30th', em:'star', c1:'#F5A300', c2:'#D6337F', date:'2026-09-16'},
+  dr:{name:'Delta Reign', em:'delta', c1:'#12B4A0', c2:'#1B47D6', date:'2026-11-06'},
+  pb:{name:'Pitch Black', em:'moon', c1:'#4B35A0', c2:'#15163A', date:'2026-07-17'},
+  cr:{name:'Chaos Rising', em:'bolt', c1:'#FF7A2E', c2:'#C4162F', date:'2026-05-22'},
+  po:{name:'Perfect Order', em:'hex', c1:'#7DBE3A', c2:'#1E7A4A', date:'2026-03-27'},
+  ah:{name:'Ascended Heroes', em:'chev', c1:'#2A7DE8', c2:'#E3A200', date:'2026-01-30'}
+};
+
+// upcoming retail drops (US)
+const DROPS = [
+  {date:'2026-10-02', set:'c30', title:'30th Celebration, wave 2',
+   items:[
+    {id:'c30-bb', name:'Booster Bundle', packs:6, msrp:26.94, sub:'Cheapest packs in the whole set'},
+    {id:'c30-mini', name:'Mini Tin', packs:2, msrp:9.99, sub:'10 tin designs, sticker sheet + art card'},
+    {id:'c30-minid', name:'Mini Tin display (10 tins)', packs:20, msrp:99.90, sub:'All 10 designs'}],
+   note:'The Binder Collection was moved from this date to Dec 4.',
+   pc:'Sold out on Pokémon Center. Best shots today: Best Buy at MSRP (plus free Mewtwo), Target\'s in-store drop at opening, and Amazon invites.'},
+  {date:'2026-10-30', set:'c30', title:'30th Celebration, wave 3',
+   items:[
+    {id:'c30-espeon', name:'Espeon ex Battle Deck', packs:0, msrp:19.99, sub:'All-foil 60-card deck, Victini card'},
+    {id:'c30-umbreon', name:'Umbreon ex Battle Deck', packs:0, msrp:19.99, sub:'All-foil 60-card deck, Zeraora card'}],
+   note:'No booster packs in these. Worth it if you play or love Espeon and Umbreon.',
+   pc:'No preorder confirmed yet. Check the Pokémon Center page for these a few weeks before Oct 30.'},
+  {date:'2026-11-06', set:'c30', title:'30th Celebration, wave 4',
+   items:[
+    {id:'c30-upcd', name:'Ultra-Premium Collection: Day', packs:30, msrp:179.99, sub:'29 packs + Classic Collection pack', gs:'https://www.gamestop.com/toys-games/trading-cards/products/pokemon-trading-card-game-30th-celebration-ultra-premium-collection-styles-may-vary/20036364.html'},
+    {id:'c30-upcn', name:'Ultra-Premium Collection: Night', packs:30, msrp:179.99, sub:'29 packs + Classic Collection pack', gs:'https://www.gamestop.com/toys-games/trading-cards/products/pokemon-trading-card-game-30th-celebration-ultra-premium-collection-styles-may-vary/20036364.html'},
+    {id:'c30-ditto', name:'Ditto Premium Collection', packs:8, msrp:39.99, sub:'Ditto promo + acrylic display'},
+    {id:'c30-mew', name:'Mew Figure Collection', packs:5, msrp:29.99, sub:'Figure + foil promo'},
+    {id:'c30-mewtwo', name:'Mewtwo Figure Collection', packs:5, msrp:29.99, sub:'Figure + foil promo'}],
+   note:'The Ultra-Premium is the only product with a Classic Collection pack, home of the Base Set Charizard reprint. Expect it to be the hardest grab of the set.',
+   pc:'No Pokémon Center preorder confirmed yet. When it opens, it will be a virtual queue that sells out fast, so be on the page the moment it goes live. GameStop already has a preorder page for the Ultra-Premium.'},
+  {date:'2026-11-06', set:'dr', title:'Delta Reign launch',
+   items:[
+    {id:'dr-pcetb', name:'Pokémon Center ETB', packs:11, msrp:59.99, sub:'Stamped Kyogre promo. Sold out on Pokémon Center', pcUrl:'https://www.pokemoncenter.com/product/10-10438-111'},
+    {id:'dr-etb', name:'Elite Trainer Box', packs:9, msrp:49.99, sub:'Kyogre promo. Stores, not Pokémon Center'},
+    {id:'dr-bb', name:'Booster Bundle', packs:6, msrp:26.94, sub:'Pokémon Center preorders sold out', pcUrl:'https://www.pokemoncenter.com/product/10-10439-109'},
+    {id:'dr-box', name:'Booster Box', packs:36, msrp:161.64, sub:'Pokémon Center preorders sold out', pcUrl:'https://www.pokemoncenter.com/product/10-10446-120'}],
+   note:'Final main set of the Mega Evolution era, led by Mega Rayquaza ex. GameStop\'s ETB preorder is $89.99, way over MSRP, so skip it.',
+   pc:'Pokémon Center preorders opened Sep 30 and sold out within hours. Next chances: Target online preorders, Best Buy invites, then stores on Nov 6. See Best shots.'},
+  {date:'2026-12-04', set:'c30', title:'30th Celebration, wave 5',
+   items:[
+    {id:'c30-sylt', name:'Sylveon ex Tin', packs:4, msrp:21.99, sub:'Sylveon ex promo'},
+    {id:'c30-grent', name:'Greninja ex Tin', packs:4, msrp:21.99, sub:'Greninja ex promo'},
+    {id:'c30-binder', name:'Binder Collection', packs:5, msrp:31.99, sub:'9-pocket binder'}],
+   note:'Last 30th Celebration wave announced so far.',
+   pc:'Not open yet. Watch for a preorder queue in November.'}
+];
+
+const RELEASED = [
+  {set:'c30', label:'30th Celebration, wave 1', date:'2026-09-16', what:'ETB, Pokémon Center ETB, ex Boxes, small collections'},
+  {set:'pb', label:'Pitch Black', date:'2026-07-17'},
+  {set:'cr', label:'Chaos Rising', date:'2026-05-22'},
+  {set:'po', label:'Perfect Order', date:'2026-03-27'},
+  {set:'ah', label:'Ascended Heroes', date:'2026-01-30'}
+];
+
+// weekly patterns. tz 'ET' = online, converted to viewer time; 'local' = store hours, shown as-is.
+// day: 0 Sun ... 6 Sat. lvl 3 best bet, 2 good, 1 sometimes
+const WINDOWS = [
+  {day:5, s:3, e:6, tz:'ET', store:'target', lvl:3, what:'Target.com overnight drop', d:'Most new Target listings and restocks land here. Sells out in 1–2 minutes.'},
+  {day:5, s:8, e:10, tz:'local', store:'target', lvl:3, what:'Target shelves at opening', d:'Friday is the most common shelf day. New sets go out right at open.'},
+  {day:5, s:15, e:18, tz:'ET', store:'target', lvl:2, what:'Target.com afternoon top-ups', d:'Existing items get refilled; less hype than the overnight wave.'},
+  {day:2, s:1, e:6, tz:'ET', store:'target', lvl:1, what:'Target.com overnight', d:'Some weeks see a Tuesday wave.'},
+  {day:3, s:1, e:6, tz:'ET', store:'target', lvl:1, what:'Target.com overnight', d:'Some weeks see a Wednesday wave.'},
+  {day:1, s:8, e:10, tz:'local', store:'target', lvl:1, what:'Target backup vendor day', d:'Some stores get their card vendor on Monday or Wednesday.'},
+  {day:3, s:17, e:18, tz:'ET', store:'walmart', lvl:3, what:'Walmart drawing', d:'Weekly lottery since Sep 16. Enter during the window; no need to be fast.'},
+  {day:3, s:21, e:24, tz:'ET', store:'walmart', lvl:2, what:'Walmart.com Wednesday night', d:'Regular online drops. Check the seller is Walmart itself.'},
+  {day:4, s:8, e:9, tz:'local', store:'walmart', lvl:3, what:'Walmart shelves', d:'Thursday morning is the best in-store day.'},
+  {day:3, s:7, e:10, tz:'local', store:'walmart', lvl:2, what:'Walmart shelves', d:'Good midweek chance while the vendor is making rounds.'},
+  {day:2, s:7, e:10, tz:'local', store:'walmart', lvl:1, what:'Walmart shelves', d:'Some vendor routes hit Tuesday.'},
+  {day:5, s:7, e:10, tz:'local', store:'walmart', lvl:1, what:'Walmart shelves', d:'Some stores restock Friday.'},
+  {day:3, s:11, e:12, tz:'ET', store:'pc', lvl:2, what:'Pokémon Center queue', d:'Wednesday is its most common drop day; queues often open around 11 AM ET.'},
+  {day:2, s:10, e:11, tz:'local', store:'bestbuy', lvl:1, what:'Best Buy shipment day', d:'Many stores get trucks Tue/Thu/Sat. Check the app before you go.'},
+  {day:4, s:10, e:11, tz:'local', store:'bestbuy', lvl:1, what:'Best Buy shipment day', d:'Check the app in the morning; stock loads overnight.'},
+  {day:6, s:10, e:11, tz:'local', store:'bestbuy', lvl:1, what:'Best Buy shipment day', d:'Weekend truck at some stores.'}
+];
+
+const STORES = {
+  target:{name:'Target', one:'Fridays, overnight + at open',
+    online:'New products mostly go live Friday around 3–6 AM ET. Top-ups come Friday afternoon, around 3–6 PM ET.',
+    store:'Friday is most common, near opening. A vendor stocks the cards, so ask your store which day they come.',
+    tip:'Target has listed 30th Celebration above MSRP (ETB at $69.99). Know the MSRP before you check out.'},
+  walmart:{name:'Walmart', one:'Wed night online, Thu morning in store',
+    online:'Wednesday drawings, about 5–6 PM ET: enter during the window and winners are picked at random. Wednesday night (9 PM–midnight ET) also gets regular online drops.',
+    store:'Tuesday through Friday, 7–10 AM. Thursday 8–9 AM is the best shot.',
+    tip:'Marketplace sellers list at huge markups (30th ETB seen up to $183.99). Only buy "sold by Walmart".'},
+  pc:{name:'Pokémon Center', one:'Usually Wednesday, ~11 AM ET',
+    online:'No posted schedule. Wednesday is the most common drop day, with queues opening around 11 AM ET. Weekend drops are rare.',
+    store:'Online only.',
+    tip:'The only place for Pokémon Center exclusive ETBs (2 extra packs + extra promo).'},
+  bestbuy:{name:'Best Buy', one:'Invite system online',
+    online:'Hot items are invite-only. Tap "Invite" on the product page or in the app\'s Drops section, often 2–4 weeks before release. If picked, you get 24 hours to buy.',
+    store:'Stock loads into their system overnight. Check the app in the morning, then go at opening. Best Buy doesn\'t take preorders on Pokémon cards.',
+    tip:'Request invites for every 30th Celebration item now. An account with real purchase history helps your odds.'},
+  gamestop:{name:'GameStop', one:'Random, but slower sellouts',
+    online:'No pattern, but drops tend to last 5–20 minutes instead of seconds.',
+    store:'Stock goes out in the morning when shipments get processed. Lots of locations, often less competition.',
+    tip:'GameStop listed the 30th ETB at $150 at launch. Always check the price first.'},
+  amazon:{name:'Amazon', one:'Invites on hot items',
+    online:'Hot items like the 30th ETB use "Request invite": tap it, and if picked you get about 24 hours to buy. Amazon also adds stock now and then, so save items in your cart.',
+    store:'—',
+    tip:'Only buy when it says ships from and sold by Amazon.'}
+};
+
+// price snapshot (USD). msrp null = not confirmed. lo/hi = market range; single value when lo==hi.
+const PRICES = [
+  {set:'c30', name:'Elite Trainer Box', packs:9, msrp:49.99, lo:120, hi:160},
+  {set:'c30', name:'Pokémon Center ETB', packs:11, msrp:59.99, lo:379, hi:379},
+  {set:'c30', name:'Ultra-Premium Collection', packs:30, msrp:179.99, lo:590, hi:605, sub:'Preorder resale, out Nov 6'},
+  {set:'c30', name:'Ditto Premium Collection', packs:8, msrp:39.99, lo:180, hi:195, sub:'Preorder resale, out Nov 6'},
+  {set:'c30', name:'ex Box', packs:null, msrp:21.99, lo:55, hi:70},
+  {set:'c30', name:'Poster Collection', packs:null, msrp:14.99, lo:40, hi:44},
+  {set:'c30', name:'Knock Out Collection', packs:null, msrp:9.99, lo:21, hi:28},
+  {set:'c30', name:'Booster Bundle', packs:6, msrp:26.94, lo:null, hi:null, sub:'Out Oct 2, no market yet'},
+  {set:'c30', name:'Mini Tin', packs:2, msrp:9.99, lo:null, hi:null, sub:'Out Oct 2, no market yet'},
+  {set:'pb', name:'Booster Box', packs:36, msrp:161.64, lo:189.05, hi:189.05},
+  {set:'pb', name:'Elite Trainer Box', packs:9, msrp:49.99, lo:74.49, hi:74.49},
+  {set:'pb', name:'Booster Bundle', packs:6, msrp:26.99, lo:41.13, hi:41.13},
+  {set:'pb', name:'Pokémon Center ETB', packs:11, msrp:null, lo:115.88, hi:115.88},
+  {set:'pb', name:'Single pack', packs:1, msrp:null, lo:6.04, hi:6.04},
+  {set:'cr', name:'Booster Box', packs:36, msrp:161.64, lo:189.96, hi:189.96},
+  {set:'cr', name:'Elite Trainer Box', packs:9, msrp:49.99, lo:69.81, hi:69.81},
+  {set:'cr', name:'Booster Bundle', packs:6, msrp:26.99, lo:38.61, hi:38.61},
+  {set:'cr', name:'Pokémon Center ETB', packs:11, msrp:null, lo:126.32, hi:126.32},
+  {set:'cr', name:'Single pack', packs:1, msrp:null, lo:5.73, hi:5.73},
+  {set:'po', name:'Booster Box', packs:36, msrp:161.64, lo:177.64, hi:177.64},
+  {set:'po', name:'Elite Trainer Box', packs:9, msrp:49.99, lo:70.90, hi:70.90},
+  {set:'po', name:'Booster Bundle', packs:6, msrp:26.99, lo:39.89, hi:39.89},
+  {set:'po', name:'Pokémon Center ETB', packs:11, msrp:null, lo:122.75, hi:122.75},
+  {set:'po', name:'Single pack', packs:1, msrp:null, lo:5.93, hi:5.93},
+  {set:'ah', name:'Elite Trainer Box', packs:9, msrp:null, lo:150.50, hi:150.50},
+  {set:'ah', name:'Booster Bundle', packs:6, msrp:null, lo:82.38, hi:82.38},
+  {set:'ah', name:'Pokémon Center ETB', packs:11, msrp:null, lo:358.13, hi:358.13},
+  {set:'ah', name:'Single pack', packs:1, msrp:null, lo:14.10, hi:14.10}
+];
+const SHOPS = [
+  {k:'pc', name:'Pokémon Center', url:q=>'https://www.pokemoncenter.com/search/'+encodeURIComponent(q), how:'Official store. Sells by virtual queue: keep the tab open and wait your turn.'},
+  {k:'target', name:'Target', url:q=>'https://www.target.com/s?searchTerm='+encodeURIComponent(q), how:'Online Fri ~3–6 AM ET. In store at opening on release day.'},
+  {k:'walmart', name:'Walmart', url:q=>'https://www.walmart.com/search?q='+encodeURIComponent(q), how:'Online Wed ~9 PM–midnight ET. Only buy "sold by Walmart".'},
+  {k:'bestbuy', name:'Best Buy', url:q=>'https://www.bestbuy.com/site/searchpage.jsp?st='+encodeURIComponent(q), how:'Open the product and tap the invite button now. If picked, you get 24 hours to buy.'},
+  {k:'gamestop', name:'GameStop', url:q=>'https://www.gamestop.com/search/?q='+encodeURIComponent(q), how:'Drops last 5–20 min. Check the price; some listings are above MSRP.'},
+  {k:'amazon', name:'Amazon', url:q=>'https://www.amazon.com/s?k='+encodeURIComponent(q), how:'Only buy if it says shipped and sold by Amazon.'}
+];
+const CHEAPEST_PACK = 4.49;
+const CHECKED = 'Oct 2, 2026';
+// Concrete buying chances, newest research. start/end are exact times (ET offsets).
+const OPPS = [
+  // ---------- IN STORE ----------
+  {mode:'store', store:'Best Buy', what:'30th Celebration Booster Bundle + Mini Tins', kind:'event', start:'2026-10-02T10:00:00-04:00', end:'2026-10-02T21:00:00-04:00', set:'c30',
+   when:'Today, at opening', price:'Bundle $26.94 (MSRP)',
+   todo:'Check the Best Buy app for your store, then go at opening. Ask for the free Mewtwo card at checkout.',
+   tips:['Limit is one of each item per person.','The Bundle is over $15, so it also gets you the Mewtwo promo.'],
+   link:{t:'Open Best Buy', u:'https://www.bestbuy.com/site/searchpage.jsp?st=pokemon%2030th%20celebration%20booster%20bundle'}},
+  {mode:'store', store:'Target', what:'30th Celebration Booster Bundles + Mini Tins', kind:'event', start:'2026-10-02T08:00:00-04:00', end:'2026-10-02T21:00:00-04:00', set:'c30',
+   when:'Today, before opening', price:'Bundle $31.99 (about $5 over MSRP)',
+   todo:'Get there before the doors open and go straight to the card area.',
+   tips:['Target confirmed this in-store drop. Some stores may also have ETBs and Poster Collections.','If the first store is empty, try a second Target later in the morning.'],
+   link:{t:'Open Target', u:'https://www.target.com/s?searchTerm=pokemon%2030th%20celebration'}},
+  {mode:'store', store:'GameStop, Five Below, Hot Topic, Barnes & Noble', what:'Free Mewtwo promo card', kind:'event', start:'2026-10-02T09:00:00-04:00', end:'2026-10-31T21:00:00-04:00', set:'c30',
+   when:'Starting today, while supplies last', price:'Spend $15+ on Pokémon cards',
+   todo:'Buy $15 or more of Pokémon cards and the Mewtwo card comes with it. Go early.',
+   tips:['Also at Best Buy, Macy\'s and BoxLunch. Not at Target or Walmart.'],
+   link:null},
+  {mode:'store', store:'Target, Best Buy, GameStop, Walmart', what:'Delta Reign + 30th Ultra-Premium Collection', kind:'event', start:'2026-11-06T08:00:00-05:00', end:'2026-11-06T21:00:00-05:00', set:'dr',
+   when:'Fri, Nov 6, at opening', price:'ETB $49.99 · UPC $179.99',
+   todo:'Release day. Be at a store before it opens.',
+   tips:['Pokémon Center preorders already sold out, so release day in stores is your best shot.'],
+   link:null},
+  // ---------- ONLINE ----------
+  {mode:'online', store:'Amazon', what:'30th Booster Bundle, Mini Tins, ETB', kind:'do', set:'c30',
+   when:'Do it now', price:'MSRP',
+   todo:'Open each item and tap "Request invite". If you\'re picked, Amazon emails you and you get about 24 hours to buy.',
+   tips:['Amazon is selling this whole wave by invitation, so there\'s nothing to race for.'],
+   link:{t:'Open Amazon', u:'https://www.amazon.com/s?k=pokemon%2030th%20celebration'}},
+  {mode:'online', store:'Walmart', what:'Weekly drawing (lottery)', kind:'event', start:'2026-10-07T17:00:00-04:00', end:'2026-10-07T18:00:00-04:00', set:'c30',
+   when:'Wed, Oct 7, about 5–6 PM ET (expected)', price:'Often above MSRP',
+   todo:'During the window, log in and tap "Enter drawing" on what you want. Winners are picked at random.',
+   tips:['Not announced yet, but Walmart has run one every Wednesday since Sep 16.','Last week: 2 Booster Bundles for $79.94. Only enter if that price is OK with you.'],
+   link:{t:'Open Walmart', u:'https://www.walmart.com/search?q=pokemon%2030th%20celebration'}},
+  {mode:'online', store:'Target.com', what:'30th Celebration restocks', kind:'event', start:'2026-10-09T03:00:00-04:00', end:'2026-10-09T05:00:00-04:00', set:'c30',
+   when:'Next likely: Fri, Oct 9, 3–5 AM ET', price:'Target price',
+   todo:'Items say "out of stock" or "coming soon" until the drop, then sell out in 1–2 minutes. Let an alert app wake you up.',
+   tips:['Target\'s usual online drop window is Friday 3–5 AM ET.','Be logged in with your card saved before the window.'],
+   link:{t:'Open Target.com', u:'https://www.target.com/s?searchTerm=pokemon%2030th%20celebration'}},
+  {mode:'online', store:'GameStop', what:'30th Ultra-Premium Collection preorder', kind:'do', set:'c30',
+   when:'Preorder page is up now', price:'MSRP $179.99, check the page',
+   todo:'Preorder with store pickup so it\'s yours on Nov 6. Check the price first.',
+   tips:['Skip GameStop\'s Delta Reign ETB at $89.99. That\'s $40 over MSRP.'],
+   link:{t:'Open GameStop', u:'https://www.gamestop.com/toys-games/trading-cards/products/pokemon-trading-card-game-30th-celebration-ultra-premium-collection-styles-may-vary/20036364.html'}},
+  {mode:'online', store:'Target.com', what:'Delta Reign preorders', kind:'watch', set:'dr',
+   when:'Not open yet, likely sometime in October', price:'ETB $49.99',
+   todo:'Nothing to buy yet. Your alert apps will tell you the moment it opens.',
+   tips:['Pokémon Center preorders sold out within hours on Sep 30.','Best Buy lists Delta Reign as "coming soon" but doesn\'t take preorders.'],
+   link:null}
+];
+const SOURCES = [
+  {t:'Pokemon TCG Restocks on X', u:'https://x.com/PokemonRestocks', d:'Posts direct links and drawing windows as they go live.'},
+  {t:'Restockd', u:'https://restockd.app/brands/pokemon', d:'Live restock tracker with alerts for Pokémon Center, Target, Walmart, Best Buy and Amazon.'},
+  {t:'TrackaLacker: Walmart drawings', u:'https://www.trackalacker.com/articles/news/walmart-wednesday-pokemon-card-drops', d:'Lists what\'s in each Wednesday Walmart drawing.'},
+  {t:'TrackaLacker: 30th Celebration', u:'https://www.trackalacker.com/articles/news/pokemon-30th-celebration-collector-guide', d:'Every 30th product with stock trackers per store.'}
+]; // 30th Celebration Booster Bundle MSRP per pack
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '$' + (Math.abs(n % 1) < 1e-9 ? String(n) : n.toFixed(2));
+const parseD = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const startOfToday = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+const daysUntil = s => Math.round((parseD(s) - startOfToday()) / 864e5);
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DOWL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function awayText(n){ return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n < 0 ? 'Out now' : `In ${n} days`; }
+function badge(key, xl){
+  const s = SETS[key];
+  const nm = xl && key === 'c30' ? '30th<small>Celebration</small>' : esc(s.name);
+  return `<span class="badge${xl ? ' xl' : ''}" style="--c1:${s.c1};--c2:${s.c2}"><span class="em" aria-hidden="true">${EM[s.em]}</span><span class="nm">${nm}</span></span>`;
+}
+const ALL_ITEMS = {};
+DROPS.forEach(d => d.items.forEach(it => ALL_ITEMS[it.id] = {...it, set:d.set, date:d.date}));
+
+/* time zone: hours the viewer is ahead of ET */
+function etOffsetHours(){
+  const now = new Date();
+  const p = new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(now);
+  const g = t => +p.find(x => x.type === t).value;
+  const et = Date.UTC(g('year'), g('month')-1, g('day'), g('hour') % 24, g('minute'));
+  const loc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+  return Math.round((loc - et) / 36e5);
+}
+const OFF = etOffsetHours();
+const TZ = (() => { try { return new Intl.DateTimeFormat('en-US',{timeZoneName:'short'}).formatToParts(new Date()).find(x=>x.type==='timeZoneName').value; } catch(e){ return 'local'; } })();
+function hr(h){ h = ((h % 24) + 24) % 24; const ap = h < 12 ? 'AM' : 'PM'; const x = h % 12 || 12; return x + ' ' + ap; }
+// convert windows to viewer-local weekly slots
+const SLOTS = WINDOWS.map(w => {
+  const shift = w.tz === 'ET' ? OFF : 0;
+  let abs = w.day*24 + w.s + shift; abs = ((abs % 168) + 168) % 168;
+  const day = Math.floor(abs / 24), s = abs % 24, e = s + (w.e - w.s);
+  return {...w, lday:day, ls:s, le:e, abs};
+});
+
+/* ---------- state (saved) ---------- */
+let state = {want:{}, got:{}, log:[]};
+const LS = 'drophunter:v1';
+try { const raw = localStorage.getItem(LS); if (raw) state = Object.assign(state, JSON.parse(raw)); } catch(e){}
+let dbDoc = null, saveTimer = null, saveMsg = '';
+function save(){
+  try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e){}
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    if (!dbDoc) return;
+    try { await dbDoc.set(JSON.parse(JSON.stringify(state))); saveMsg = 'Saved to your tracker.'; }
+    catch(e){ saveMsg = 'Saved on this device only.'; }
+    const el = $('#savedmsg'); if (el) el.textContent = saveMsg;
+  }, 500);
+}
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const db = await window.claude.use('db');
+    if (!db) return;
+    dbDoc = db.doc('tracker/me');
+    const snap = await dbDoc.get();
+    if (snap.exists) { const d = snap.data() || {}; state = {want:d.want||{}, got:d.got||{}, log:Array.isArray(d.log)?d.log:[]}; try{localStorage.setItem(LS, JSON.stringify(state));}catch(e){} renderAll(); }
+    saveMsg = 'Saved to your tracker.';
+  } catch(e){ dbDoc = null; }
+})();
+
+/* ---------- hero ---------- */
+function nextWindow(){
+  const n = new Date(); const nowAbs = n.getDay()*24 + n.getHours();
+  const good = SLOTS.filter(s => s.lvl >= 2);
+  let best = null, bestDist = 999;
+  good.forEach(s => {
+    let dist = s.abs - nowAbs; if (dist + (s.le - s.ls) <= 0) dist += 168; // allow in-progress
+    if (dist < bestDist){ bestDist = dist; best = s; }
+  });
+  return {slot:best, dist:bestDist};
+}
+function renderHero(){
+  const t = new Date();
+  $('#today').textContent = `${DOWL[t.getDay()]}, ${MON[t.getMonth()]} ${t.getDate()}`;
+  const next = DROPS.find(d => daysUntil(d.date) >= 0) || DROPS[DROPS.length-1];
+  const n = daysUntil(next.date), dt = parseD(next.date);
+  const when = n === 0 ? 'hits shelves today' : n === 1 ? 'hits shelves tomorrow' : `hits shelves in ${n} days`;
+  const {slot, dist} = nextWindow();
+  let win = '';
+  if (slot){
+    const live = dist <= 0;
+    const dayWord = live ? 'Happening now' : dist < 24 && slot.lday === t.getDay() ? 'Today' : DOWL[slot.lday];
+    const tzl = slot.tz === 'ET' ? TZ : 'store time';
+    win = `<div class="window"><span class="lvl l${slot.lvl}" aria-hidden="true"></span><div><b>Next restock window: ${esc(slot.what)}</b><span class="when">${dayWord}, ${hr(slot.ls)}–${hr(slot.le)} ${tzl}</span></div></div>`;
+  }
+  $('#hero').innerHTML = `${badge(next.set, true)}
+    <h1>${esc(next.title)} ${when}.</h1>
+    <p>${DOWL[dt.getDay()]}, ${MON[dt.getMonth()]} ${dt.getDate()}. ${next.items.map(i => esc(i.name)).slice(0,3).join(', ')}.</p>
+    ${win}`;
+  const b = $('#hero .badge');
+  requestAnimationFrame(() => b.classList.add('play'));
+  b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.setProperty('--r', ((e.clientX - r.left)/r.width*140 - 40) + 'deg'); });
+  b.addEventListener('pointerleave', () => b.style.setProperty('--r','20deg'));
+}
+
+/* ---------- drops ---------- */
+function planFor(d){
+  const dt = parseD(d.date); const dow = DOWL[dt.getDay()];
+  const prev = DOWL[(dt.getDay()+6)%7];
+  return `<details class="plan"><summary>How to get it on release day</summary><ol>
+    <li>Before: request Best Buy invites for anything you want and save payment info at every store.</li>
+    <li>${prev} night: keep an eye on Walmart.com and Best Buy, which sometimes load stock late at night.</li>
+    <li>${dow} ${hr(3+OFF)}–${hr(6+OFF)} ${TZ}: Target.com overnight listings.</li>
+    <li>At opening: Target first, then Walmart, GameStop or Best Buy nearby.</li>
+    <li>Around ${hr(11+OFF)} ${TZ}: Pokémon Center drops most often start then (usually Wednesdays), so check if a queue is up.</li>
+    <li>${hr(15+OFF)}–${hr(18+OFF)} ${TZ}: Target.com afternoon top-ups if you missed out.</li></ol></details>`;
+}
+function itemRow(it, setKey){
+  const on = !!state.want[it.id];
+  const ppp = it.packs ? `${money(it.msrp/it.packs)}/pack` : 'no packs';
+  const q = `pokemon ${SETS[setKey].name} ${it.name.replace(/:.*/, '')}`;
+  const open = !!openBuy[it.id];
+  const shops = SHOPS.map(s => {
+    const url = s.k === 'gamestop' && it.gs ? it.gs : s.k === 'pc' && it.pcUrl ? it.pcUrl : s.url(q);
+    return `<li><a class="shop${s.k==='pc'?' pc':''}" href="${esc(url)}" target="_blank" rel="noopener">${esc(s.name)}<span aria-hidden="true">↗</span></a><span class="how">${esc(s.how)}</span></li>`;
+  }).join('');
+  return `<li><div class="irow"><div class="nmx">${esc(it.name)}<span>${esc(it.sub)} · ${it.packs ? it.packs + ' packs, ' : ''}${ppp}</span>
+    <button class="wbtn" data-buy="${it.id}" aria-expanded="${open}" aria-controls="buy-${it.id}">${open ? 'Hide stores ▴' : 'Where to buy ▾'}</button></div>
+    <span class="price">${money(it.msrp)}</span>
+    <button class="star" data-want="${it.id}" aria-pressed="${on}" aria-label="${on ? 'Remove from' : 'Add to'} my list: ${esc(it.name)}">${on ? '★' : '☆'}</button></div>
+    <div class="buy" id="buy-${it.id}" ${open ? '' : 'hidden'}><p>Coming to Pokémon Center and stores that sell Pokémon cards. Each button searches that store for this item.</p><ul class="shops">${shops}</ul></div></li>`;
+}
+const openBuy = {};
+function renderDrops(){
+  const up = DROPS.filter(d => daysUntil(d.date) >= 0);
+  const html = up.map(d => {
+    const dt = parseD(d.date), n = daysUntil(d.date);
+    return `<article class="drop"><div class="cal" aria-hidden="true"><div class="dow">${DOW[dt.getDay()]}</div><div class="dn">${dt.getDate()}</div><div class="mo">${MON[dt.getMonth()]}</div></div>
+      <div>${badge(d.set)}<h3>${esc(d.title)}</h3><div class="away">${awayText(n)} · ${DOWL[dt.getDay()]}, ${MON[dt.getMonth()]} ${dt.getDate()}</div>
+      <ul class="items">${d.items.map(it => itemRow(it, d.set)).join('')}</ul>
+      <p class="note">${esc(d.note)}</p>${d.pc ? `<div class="pcnote"><b>On the Pokémon website</b>${esc(d.pc)}<br><a href="https://www.pokemoncenter.com/search/${encodeURIComponent(SETS[d.set].name)}" target="_blank" rel="noopener">Open Pokémon Center ↗</a></div>` : ''}${planFor(d)}</div></article>`;
+  }).join('') || '<p class="empty">No announced drops left. New dates get added as they are announced.</p>';
+  const out = RELEASED.map(r => { const dt = parseD(r.date); return `<div class="outrow">${badge(r.set)}<span>${MON[dt.getMonth()]} ${dt.getDate()}</span></div>`; }).join('');
+  $('#p-drops').innerHTML = `<div>${html}</div><div class="out"><h2>Already out</h2>${out}<p class="note">Hot 30th Celebration items from wave 1 (ETB, ex Boxes) keep restocking. See the Restocks tab.</p></div>`;
+}
+
+/* ---------- week ---------- */
+let selDay = new Date().getDay();
+function renderWeek(){
+  const today = new Date().getDay();
+  const hasBig = d => SLOTS.some(s => s.lday === d && s.lvl === 3);
+  const days = [0,1,2,3,4,5,6].map(d => `<button data-day="${d}" aria-pressed="${d===selDay}" aria-label="${DOWL[d]}${d===today?' (today)':''}">${d===today?'Today':DOW[d]}${hasBig(d)?'<span class="pip" aria-hidden="true"></span>':''}</button>`).join('');
+  const list = SLOTS.filter(s => s.lday === selDay).sort((a,b) => a.ls - b.ls);
+  const lvlName = ['','Sometimes','Good','Best bet'];
+  const slots = list.length ? list.map(s => `<li><span class="t">${hr(s.ls)}–${hr(s.le)}</span><span><b>${esc(s.what)}</b><span class="tag l${s.lvl}">${lvlName[s.lvl]}</span></span><span class="d">${esc(s.d)}${s.tz==='local'?' (store hours)':''}</span></li>`).join('')
+    : `<li class="empty">Quiet day for restocks. Good time to request Best Buy invites and check prices before the next window.</li>`;
+  const stores = Object.values(STORES).map(s => `<details class="store"><summary>${esc(s.name)} <span>${esc(s.one)}</span></summary><dl>
+    <dt>Online</dt><dd>${esc(s.online)}</dd>${s.store!=='—'?`<dt>In store</dt><dd>${esc(s.store)}</dd>`:''}<dt>Tip</dt><dd>${esc(s.tip)}</dd></dl></details>`).join('');
+  $('#p-week').innerHTML = `<div class="days" role="group" aria-label="Pick a day">${days}</div>
+    <ul class="slots">${slots}</ul>
+    <p class="tznote">Online times shown in your time zone (${esc(TZ)}). Store times are local opening hours. Green dot = a best-bet day.</p>
+    <div class="stores"><h2 style="font-size:17px;margin:0 0 10px">Store playbook</h2>${stores}</div>`;
+}
+
+/* ---------- prices ---------- */
+let selSet = 'c30';
+function verdict(r){ if (r <= 1.15) return ['At MSRP','v1']; if (r <= 1.6) return ['A bit high','v2']; if (r <= 2.5) return ['Pricey','v3']; return ['Scalper zone','v4']; }
+function renderPrices(){
+  const chips = ['c30','pb','cr','po','ah'].map(k => `<button data-set="${k}" aria-pressed="${k===selSet}">${esc(SETS[k].name)}</button>`).join('');
+  const rows = PRICES.filter(p => p.set === selSet).map(p => {
+    const mid = p.lo == null ? null : (p.lo + p.hi) / 2;
+    const mk = p.lo == null ? '—' : p.lo === p.hi ? money(p.lo) : `${money(p.lo)}–${money(p.hi)}`;
+    let bar = '', v = '';
+    if (mid != null && p.msrp){
+      const r = mid / p.msrp; const [vt, vc] = verdict(r);
+      const w = Math.min(100, r / 4 * 100);
+      const col = vc === 'v1' ? 'var(--green)' : vc === 'v2' ? 'var(--amber)' : 'var(--red)';
+      bar = `<div class="bar" role="img" aria-label="${r.toFixed(1)} times MSRP"><i style="width:${w}%;background:${col}"></i></div>`;
+      v = `<span class="verdict ${vc}">${vt} · ${r.toFixed(1)}× MSRP</span>`;
+    } else if (mid != null){ v = '<span>MSRP not confirmed</span>'; }
+    else { v = `<span>${esc(p.sub || '')}</span>`; }
+    const ppp = mid != null && p.packs ? `${money(mid / p.packs)}/pack at market` : '';
+    return `<div class="prow"><div class="h"><b>${esc(p.name)}</b><span class="mk">${mk}</span></div>
+      <div class="sub"><span>${p.msrp ? 'MSRP ' + money(p.msrp) : 'MSRP —'}${p.packs ? ' · ' + p.packs + ' pack' + (p.packs>1?'s':'') : ''}</span><span>${ppp}</span></div>
+      ${bar}<div class="sub" style="margin-top:6px">${v}${p.sub && mid != null ? `<span>${esc(p.sub)}</span>` : ''}</div></div>`;
+  }).join('');
+  $('#p-prices').innerHTML = `<div class="chips" role="group" aria-label="Pick a set">${chips}</div>${rows}
+    <p class="src">Bar marker = 1× MSRP; a full bar is 4× or more. Market prices as of Sep 28, 2026.</p>
+    <div class="calc"><h2 style="font-size:17px;margin:0">Is this a good deal?</h2>
+      <div class="row"><label class="f">Price you see<input id="cp" type="number" inputmode="decimal" min="0" step="0.01" placeholder="69.99"></label>
+      <label class="f">Packs inside<input id="cn" type="number" inputmode="numeric" min="1" step="1" placeholder="9"></label></div>
+      <div class="calcout" id="co">Enter a price and pack count.</div></div>`;
+}
+function calc(){
+  const p = parseFloat($('#cp').value), n = parseInt($('#cn').value, 10), out = $('#co');
+  if (!(p > 0) || !(n > 0)){ out.textContent = 'Enter a price and pack count.'; return; }
+  const ppp = p / n, r = ppp / CHEAPEST_PACK; const [vt, vc] = verdict(r);
+  out.innerHTML = `<b>${money(ppp)} per pack.</b> <span class="verdict ${vc}">${vt}</span>, ${r.toFixed(1)}× the cheapest retail pack price (${money(CHEAPEST_PACK)}).`;
+}
+
+/* ---------- best shots ---------- */
+const ICON = {
+  online:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+  store:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9h16v11H4z"/><path d="M10 20v-6h4v6"/></svg>'
+};
+function oppStatus(o){
+  if (o.kind === 'do') return {cls:'soon', txt:'Do now', rank:1};
+  if (o.kind === 'watch') return {cls:'', txt:'Not open yet', rank:50};
+  const now = Date.now(), s = Date.parse(o.start), e = Date.parse(o.end);
+  if (now >= s && now < e) return {cls:'live', txt:'Happening now', rank:0};
+  if (now >= e) return {cls:'', txt:'Ended', rank:99};
+  const hrs = (s - now) / 36e5;
+  const txt = hrs < 1 ? 'Starts soon' : hrs < 24 ? `In ${Math.round(hrs)} hours` : `In ${Math.ceil(hrs/24)} days`;
+  return {cls: hrs < 24 ? 'soon' : '', txt, rank: 2 + hrs/1000};
+}
+function gcal(o){
+  const f = t => new Date(t).toISOString().replace(/[-:]/g,'').replace(/[.][0-9]{3}/,'');
+  const p = new URLSearchParams({action:'TEMPLATE', text:o.store + ': ' + o.what, dates:f(Date.parse(o.start)-15*6e4) + '/' + f(Date.parse(o.end)), details:o.todo});
+  return 'https://calendar.google.com/calendar/render?' + p.toString();
+}
+let bestMode = 'store';
+function renderBest(){
+  const all = OPPS.map(o => ({o, st:oppStatus(o)})).filter(x => x.st.txt !== 'Ended');
+  const count = m => all.filter(x => x.o.mode === m).length;
+  const list = all.filter(x => x.o.mode === bestMode).sort((a,b) => a.st.rank - b.st.rank);
+  const cards = list.map(({o, st}) => {
+    const remind = o.kind === 'event' && st.txt !== 'Happening now' ? `<a class="alt" href="${esc(gcal(o))}" target="_blank" rel="noopener">Remind me 🔔</a>` : '';
+    const btn = o.link ? `<a href="${esc(o.link.u)}" target="_blank" rel="noopener">${esc(o.link.t)} ↗</a>` : '';
+    return `<article class="opp ${st.cls}">
+      <div class="ohead"><span class="mode ${o.mode}">${ICON[o.mode]}${o.mode === 'store' ? 'IN STORE' : 'ONLINE'}</span><span class="pill ${st.cls}">${st.txt}</span></div>
+      <div class="store-nm">${esc(o.store)}</div><p class="what">${esc(o.what)}</p>
+      <dl class="facts"><dt>When</dt><dd>${esc(o.when)}</dd><dt>Price</dt><dd>${esc(o.price)}</dd><dt>Do this</dt><dd>${esc(o.todo)}</dd></dl>
+      ${btn || remind ? `<div class="links">${btn}${remind}</div>` : ''}
+      ${o.tips.length ? `<details class="more"><summary>More tips</summary><ol>${o.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>` : ''}
+    </article>`;
+  }).join('');
+  $('#p-best').innerHTML = `
+    <section class="alerts"><h2>Get pinged the second it drops</h2>
+      <p>A web page can't watch store sites on its own, so set these up once. They track the stores for you and send phone notifications.</p>
+      <div class="arow"><span class="n">1</span><div><b>Restockd app</b>Real-time phone alerts for Target, Best Buy, Walmart and Amazon. Follow the 30th Celebration items.</div><a href="https://restockd.app/brands/pokemon" target="_blank" rel="noopener">Open ↗</a></div>
+      <div class="arow"><span class="n">2</span><div><b>TrackaLacker</b>Alerts when a Pokémon Center queue opens, plus store stock alerts.</div><a href="https://www.trackalacker.com/articles/news/pokemon-30th-celebration-collector-guide" target="_blank" rel="noopener">Open ↗</a></div>
+      <div class="arow"><span class="n">3</span><div><b>@PokemonRestocks on X</b>Tap the bell on their profile to get every drop post.</div><a href="https://x.com/PokemonRestocks" target="_blank" rel="noopener">Open ↗</a></div>
+    </section>
+    <div class="seg" role="group" aria-label="Show">
+      <button data-mode="store" aria-pressed="${bestMode==='store'}">${ICON.store}In store (${count('store')})</button>
+      <button data-mode="online" aria-pressed="${bestMode==='online'}">${ICON.online}Online (${count('online')})</button>
+    </div>
+    ${cards}
+    <p class="checked">Checked ${CHECKED}. Ask me to refresh drops anytime.</p>`;
+}
+
+/* ---------- my list ---------- */
+function ago(ts){ const m = Math.round((Date.now()-ts)/6e4); if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; const h = Math.round(m/60); if (h < 24) return h + ' h ago'; return Math.round(h/24) + ' d ago'; }
+function renderMine(){
+  const ids = Object.keys(state.want).filter(id => ALL_ITEMS[id]);
+  const hunting = ids.filter(id => !state.got[id]), got = ids.filter(id => state.got[id]);
+  const li = id => { const it = ALL_ITEMS[id], dt = parseD(it.date), g = !!state.got[id];
+    return `<li><div class="nmx">${esc(it.name)}<span>${esc(SETS[it.set].name)} · ${MON[dt.getMonth()]} ${dt.getDate()} · ${money(it.msrp)}</span></div>
+      <button class="gotbtn" data-got="${id}" aria-pressed="${g}">${g ? 'Got it' : 'Mark got'}</button></li>`; };
+  const total = hunting.reduce((a, id) => a + ALL_ITEMS[id].msrp, 0);
+  const storeOpts = Object.entries(STORES).map(([k,s]) => `<option value="${k}">${esc(s.name)}</option>`).join('') + '<option value="other">Other</option>';
+  const log = state.log.slice().sort((a,b)=>b.t-a.t).map((l,i) => `<li><div><b>${esc(l.item || 'Pokémon product')}</b> at ${esc(STORES[l.store]?.name || 'another store')}<small>${ago(l.t)}${l.note ? ' · ' + esc(l.note) : ''}</small></div><button class="x" data-del="${l.t}" aria-label="Delete this sighting">×</button></li>`).join('');
+  $('#p-mine').innerHTML = `<div class="sec"><h2>Hunting</h2>${hunting.length ? `<ul class="mine">${hunting.map(li).join('')}</ul><div class="total"><span>At MSRP</span><b>${money(total)}</b></div>` : '<p class="empty" style="padding:0">Tap ☆ on anything in Drops to start your list.</p>'}</div>
+    ${got.length ? `<div class="sec"><h2>Got it</h2><ul class="mine">${got.map(li).join('')}</ul></div>` : ''}
+    <div class="sec"><h2>Restock sightings</h2>
+      <form class="logform" id="logform"><div class="row"><label class="f">Store<select id="ls">${storeOpts}</select></label>
+      <label class="f">What was there<input id="li" maxlength="60" placeholder="30th ETB"></label></div>
+      <label class="f">Note<input id="ln" maxlength="80" placeholder="Fri 8 AM, 6 on shelf, limit 2"></label>
+      <button class="btn" type="submit">Log sighting</button></form>
+      <ul class="log">${log}</ul>
+      <p class="saved" id="savedmsg">${esc(saveMsg)}</p>
+      <p class="note">Logging when your local stores restock shows you their real pattern after a few weeks.</p></div>`;
+}
+
+/* ---------- events ---------- */
+function renderAll(){ renderHero(); renderBest(); renderDrops(); renderWeek(); renderPrices(); renderMine(); }
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.getAttribute('role') === 'tab'){
+    document.querySelectorAll('[role=tab]').forEach(b => { const on = b === t; b.setAttribute('aria-selected', on); document.getElementById(b.getAttribute('aria-controls')).hidden = !on; });
+    return;
+  }
+  if (t.dataset.mode){ bestMode = t.dataset.mode; renderBest(); return; }
+  if (t.dataset.buy){ const id = t.dataset.buy; openBuy[id] = !openBuy[id]; const el = document.getElementById('buy-'+id); el.hidden = !openBuy[id]; t.setAttribute('aria-expanded', openBuy[id]); t.textContent = openBuy[id] ? 'Hide stores ▴' : 'Where to buy ▾'; return; }
+  if (t.dataset.want){ const id = t.dataset.want; if (state.want[id]) { delete state.want[id]; delete state.got[id]; } else state.want[id] = true; save(); renderDrops(); renderMine(); return; }
+  if (t.dataset.got){ const id = t.dataset.got; if (state.got[id]) delete state.got[id]; else state.got[id] = true; save(); renderMine(); return; }
+  if (t.dataset.day){ selDay = +t.dataset.day; renderWeek(); return; }
+  if (t.dataset.set){ selSet = t.dataset.set; renderPrices(); return; }
+  if (t.dataset.del){ const ts = +t.dataset.del; state.log = state.log.filter(l => l.t !== ts); save(); renderMine(); return; }
+});
+document.addEventListener('input', e => { if (e.target.id === 'cp' || e.target.id === 'cn') calc(); });
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'logform') return; e.preventDefault();
+  const item = $('#li').value.trim(), note = $('#ln').value.trim();
+  if (!item && !note) { $('#li').focus(); return; }
+  state.log.push({t:Date.now(), store:$('#ls').value, item, note}); state.log = state.log.slice(-100);
+  save(); renderMine();
+});
+renderAll();
+</script>
+</body>
+</html>
